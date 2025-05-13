@@ -1,131 +1,138 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
-
-import React from 'react';
-import type {PropsWithChildren} from 'react';
+import * as React from 'react';
 import {
+  Button,
+  findNodeHandle,
+  SafeAreaView,
   ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
   View,
 } from 'react-native';
+import Reanimated, {
+  LayoutAnimation,
+  LayoutAnimationsValues,
+  useAnimatedScrollHandler,
+  withSpring,
+} from 'react-native-reanimated';
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+const AnimatedScrollView = Reanimated.createAnimatedComponent(ScrollView);
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
+const BAR_SPRING_PHYSICS = {
+  mass: 10,
+  damping: 100,
+  stiffness: 200,
+};
 
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+interface ThingProps {
+  selected: boolean;
+}
+
+function Thing({selected}: ThingProps) {
+  const height = selected ? 40 : 8;
+  const style = React.useMemo(
+    () => ({
+      backgroundColor: 'black',
+      width: 50,
+      height,
+      marginTop: 50 + (height / 2) * -1,
+    }),
+    [height],
+  );
+  const layout = React.useCallback(
+    (values: LayoutAnimationsValues): LayoutAnimation => {
+      'worklet';
+      return {
+        animations: {
+          originY: withSpring(values.targetOriginY, BAR_SPRING_PHYSICS),
+          originX: withSpring(values.targetOriginX, BAR_SPRING_PHYSICS),
+          height: withSpring(values.targetHeight, BAR_SPRING_PHYSICS),
+        },
+        initialValues: {
+          height: values.currentHeight,
+          originY: values.currentOriginY,
+          originX: values.currentOriginX,
+        },
+      };
+    },
+    [],
+  );
+
   return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
+    <View
+      style={{
+        backgroundColor: selected ? 'blue' : 'red',
+        width: '100%',
+        height: 100,
+      }}>
+      <Reanimated.View style={style} layout={layout} />
     </View>
   );
 }
 
-function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+function WeirdScrollView() {
+  const handlers = useAnimatedScrollHandler({
+    onScroll: event => {
+      'worklet';
+      console.log('htht - scroll - weird', event);
+    },
+  });
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
+  const ref = React.useRef(null);
 
-  /*
-   * To keep the template simple and small we're adding padding to prevent view
-   * from rendering under the System UI.
-   * For bigger apps the reccomendation is to use `react-native-safe-area-context`:
-   * https://github.com/AppAndFlow/react-native-safe-area-context
-   *
-   * You can read more about it here:
-   * https://github.com/react-native-community/discussions-and-proposals/discussions/827
-   */
-  const safePadding = '5%';
+  // React.useEffect(() => {
+  //   const viewTag = findNodeHandle(ref.current as any);
+  //   console.log('htht - going', handlers.workletEventHandler, viewTag);
+  //   handlers.workletEventHandler.registerForEvents(viewTag as number);
+
+  //   return () => {
+  //     handlers.workletEventHandler.unregisterFromEvents(viewTag);
+  //   };
+  // }, [handlers.workletEventHandler]);
 
   return (
-    <View style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        style={backgroundStyle}>
-        <View style={{paddingRight: safePadding}}>
-          <Header/>
-        </View>
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-            paddingHorizontal: safePadding,
-            paddingBottom: safePadding,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </View>
+    <AnimatedScrollView
+      ref={ref}
+      contentOffset={{x: 0, y: 234}}
+      onScroll={handlers}
+    />
   );
 }
 
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
+// function WeirderScrollView() {
+//   const ref = React.useRef(null);
 
-export default App;
+//   React.useEffect(() => {
+//     const worklet = new WorkletEventHandler(
+//       (event: ReanimatedEvent<NativeSyntheticEvent<NativeScrollEvent>>) => {
+//         'worklet';
+//         console.log('htht - scroll - weirder');
+//       },
+//       ['onScroll'],
+//     );
+//     const viewTag = findNodeHandle(ref.current as any);
+//     worklet.registerForEvents(viewTag as number);
+
+//     return () => {
+//       worklet.unregisterFromEvents(viewTag as number);
+//     };
+//   }, []);
+
+//   return <ScrollView ref={ref} contentOffset={{x: 0, y: 123}} />;
+// }
+
+export default function HomeScreen() {
+  const [firstSelected, setFirstSelected] = React.useState(false);
+
+  function toggle() {
+    setFirstSelected(prev => !prev);
+  }
+  // <DebugFastList key={firstSelected ? '1' : '2'} sections={[0]} />
+  // <WeirdScrollView key={firstSelected ? '1' : '2'}/>
+
+  return (
+    <SafeAreaView>
+      <Button onPress={toggle} title="Toggle" />
+      <Thing selected={firstSelected} />
+      <Thing selected={!firstSelected} />
+      <WeirdScrollView key={firstSelected ? '1' : '2'} />
+    </SafeAreaView>
+  );
+}
