@@ -1,11 +1,5 @@
 import * as React from 'react';
-import {
-  Button,
-  findNodeHandle,
-  SafeAreaView,
-  ScrollView,
-  View,
-} from 'react-native';
+import {Button, SafeAreaView, ScrollView, View} from 'react-native';
 import Reanimated, {
   LayoutAnimation,
   LayoutAnimationsValues,
@@ -67,72 +61,48 @@ function Thing({selected}: ThingProps) {
   );
 }
 
-function WeirdScrollView() {
+function WeirdScrollView({foo}: {foo?: string}) {
   const handlers = useAnimatedScrollHandler({
-    onScroll: event => {
+    onScroll: () => {
       'worklet';
-      console.log('htht - scroll - weird', event);
     },
   });
 
   const ref = React.useRef(null);
 
-  // React.useEffect(() => {
-  //   const viewTag = findNodeHandle(ref.current as any);
-  //   console.log('htht - going', handlers.workletEventHandler, viewTag);
-  //   handlers.workletEventHandler.registerForEvents(viewTag as number);
-
-  //   return () => {
-  //     handlers.workletEventHandler.unregisterFromEvents(viewTag);
-  //   };
-  // }, [handlers.workletEventHandler]);
+  React.useEffect(() => {
+    ref.current.scrollTo({
+      x: 0,
+      y: 234,
+    });
+  }, [foo]);
 
   return (
     <AnimatedScrollView
       ref={ref}
       contentOffset={{x: 0, y: 234}}
-      onScroll={handlers}
-    />
+      onScroll={handlers}>
+      <View style={{backgroundColor: 'black', width: 10, height: 2000}} />
+    </AnimatedScrollView>
   );
 }
 
-// function WeirderScrollView() {
-//   const ref = React.useRef(null);
-
-//   React.useEffect(() => {
-//     const worklet = new WorkletEventHandler(
-//       (event: ReanimatedEvent<NativeSyntheticEvent<NativeScrollEvent>>) => {
-//         'worklet';
-//         console.log('htht - scroll - weirder');
-//       },
-//       ['onScroll'],
-//     );
-//     const viewTag = findNodeHandle(ref.current as any);
-//     worklet.registerForEvents(viewTag as number);
-
-//     return () => {
-//       worklet.unregisterFromEvents(viewTag as number);
-//     };
-//   }, []);
-
-//   return <ScrollView ref={ref} contentOffset={{x: 0, y: 123}} />;
-// }
+const uiManager = global?.nativeFabricUIManager ? 'Fabric' : 'Paper';
 
 export default function HomeScreen() {
-  const [firstSelected, setFirstSelected] = React.useState(false);
+  const [selected, setSelected] = React.useState(false);
 
   function toggle() {
-    setFirstSelected(prev => !prev);
+    setSelected(prev => !prev);
   }
-  // <DebugFastList key={firstSelected ? '1' : '2'} sections={[0]} />
-  // <WeirdScrollView key={firstSelected ? '1' : '2'}/>
 
+  // Pass key to WeirdScrollView: breaks
+  // Pass foo to WeirdScrollView: works
   return (
     <SafeAreaView>
-      <Button onPress={toggle} title="Toggle" />
-      <Thing selected={firstSelected} />
-      <Thing selected={!firstSelected} />
-      <WeirdScrollView key={firstSelected ? '1' : '2'} />
+      <Button onPress={toggle} title={`Toggle (${uiManager})`} />
+      <Thing selected={selected} />
+      <WeirdScrollView key={selected ? '1' : '2'} />
     </SafeAreaView>
   );
 }
