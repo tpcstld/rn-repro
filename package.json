@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "react": "19.0.0",
+    "react-freeze": "^1.0.4",
     "react-native": "0.79.2",
     "react-native-reanimated": "3.17.5"
   },
